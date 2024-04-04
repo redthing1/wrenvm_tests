@@ -9,7 +9,7 @@
 
 const char* BUILTIN_MODULE_NAME = "builtin";
 const char* BUILTIN_MODULE_SOURCE = R"***(
-foreign class Test {
+class Test {
   foreign static cool_func_impl(name, platforms, hashes)
 
   static cool_func(meta) {
@@ -58,10 +58,6 @@ static void fcall_cool_func_impl(WrenVM* vm) {
   // read the arguments to make a CoolMeta struct
   // if we can parse successfully, return true
 
-  // ensure that we have plenty of slots
-  wrenEnsureSlots(vm, WREN_NEEDED_SLOTS);
-  size_t slot_temp = 10;
-
   // get name
   size_t arg_name_slot = 1;
   assert_msg(wrenGetSlotType(vm, arg_name_slot) == WREN_TYPE_STRING, "name must be a string");
@@ -72,14 +68,25 @@ static void fcall_cool_func_impl(WrenVM* vm) {
   assert_msg(wrenGetSlotType(vm, arg_platforms_slot) == WREN_TYPE_LIST, "platforms must be a list");
   WrenHandle* platforms_list = wrenGetSlotHandle(vm, arg_platforms_slot);
   std::vector<std::string> platforms;
-  size_t platforms_count = wrenGetListCount(vm, arg_platforms_slot);
-  for (size_t i = 0; i < platforms_count; i++) {
-    size_t platform_list_el_slot = slot_temp;
-    wrenGetListElement(vm, arg_platforms_slot, i, platform_list_el_slot);
-    assert_msg(wrenGetSlotType(vm, platform_list_el_slot) == WREN_TYPE_STRING, "platform must be a string");
-    const char* platform = wrenGetSlotString(vm, platform_list_el_slot);
-    platforms.push_back(platform);
-  }
+
+  // get hashes
+  size_t arg_hashes_slot = 3;
+  assert_msg(wrenGetSlotType(vm, arg_hashes_slot) == WREN_TYPE_MAP, "hashes must be a map");
+  WrenHandle* hashes_map = wrenGetSlotHandle(vm, arg_hashes_slot);
+  std::unordered_map<std::string, std::string> hashes;
+
+  // ensure that we have plenty of slots
+  wrenEnsureSlots(vm, WREN_NEEDED_SLOTS);
+  size_t slot_temp = 10;
+
+  // size_t platforms_count = wrenGetListCount(vm, arg_platforms_slot);
+  // for (size_t i = 0; i < platforms_count; i++) {
+  //   size_t platform_list_el_slot = slot_temp;
+  //   wrenGetListElement(vm, arg_platforms_slot, i, platform_list_el_slot);
+  //   assert_msg(wrenGetSlotType(vm, platform_list_el_slot) == WREN_TYPE_STRING, "platform must be a string");
+  //   const char* platform = wrenGetSlotString(vm, platform_list_el_slot);
+  //   platforms.push_back(platform);
+  // }
 
   // return true
   wrenSetSlotBool(vm, 0, true);
@@ -193,6 +200,10 @@ int main(void) {
   }
   bool run_result = wrenGetSlotBool(vm, 0);
   printf("wren: Script.run() returned %s\n", run_result ? "true" : "false");
+
+  // release handles
+  wrenReleaseHandle(vm, script_class);
+  wrenReleaseHandle(vm, run_method);
 
   printf("wren: free vm\n");
   wrenFreeVM(vm);
