@@ -1,0 +1,3 @@
+[submodule "external/wren"]
+path = external/wren
+url = https://github.com/wren-lang/wren
