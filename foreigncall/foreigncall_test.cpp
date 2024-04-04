@@ -88,6 +88,10 @@ static void fcall_cool_func_impl(WrenVM* vm) {
   //   platforms.push_back(platform);
   // }
 
+  // release handles
+  wrenReleaseHandle(vm, platforms_list);
+  wrenReleaseHandle(vm, hashes_map);
+
   // return true
   wrenSetSlotBool(vm, 0, true);
 }
